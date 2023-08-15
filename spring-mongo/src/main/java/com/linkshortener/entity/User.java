@@ -5,7 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.HashMap;
 
-@Document
+@Document(collection = "users")
 public class User {
     @Id
     private String id;
@@ -62,4 +62,8 @@ public class User {
     public void setEmailVerified(boolean emailVerified) {
         isEmailVerified = emailVerified;
     }
+
+
+
+
 }
