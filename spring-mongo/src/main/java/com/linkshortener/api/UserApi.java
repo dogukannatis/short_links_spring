@@ -2,12 +2,11 @@ package com.linkshortener.api;
 
 import com.linkshortener.controller.UserController;
 import com.linkshortener.entity.User;
-import com.linkshortener.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -15,31 +14,51 @@ import java.util.Optional;
 public class UserApi {
 
 
-    private UserController userRepository;
+    private UserController userController;
 
     @GetMapping("/getAllUsers")
     public ResponseEntity<List<User>> getAllUsers() {
-        return userRepository.getAllUsers();
+        return userController.getAllUsers();
+    }
+
+    @PostMapping("/signin")
+    public ResponseEntity<Map<String, Object>> signIn(@RequestBody String userID, String password) {
+        return userController.signIn(userID, password);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<Optional<User>> getMyData(@RequestBody String userID) {
+        return userController.getMyData(userID);
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<Optional<User>> updateUserData(@RequestBody String userID, @RequestBody User user) {
+        return userController.updateUserData(userID, user);
     }
 
     @GetMapping("/getUserWithId/{id}")
     public ResponseEntity<Optional<User>> getUserWithId(@PathVariable final String id) {
-        return userRepository.getUserWithId(id);
+        return userController.getUserWithId(id);
     }
 
     @PostMapping("/updateUser/{id}")
     public ResponseEntity<Optional<User>> updateUser(@PathVariable final String id, @RequestBody User newUser) {
-        return userRepository.updateUser(id, newUser);
+        return userController.updateUser(id, newUser);
     }
 
     @PostMapping("/saveUser")
     public ResponseEntity<User> saveUser(@RequestBody User user) {
-        return userRepository.saveUser(user);
+        return userController.saveUser(user);
     }
 
-    @PostMapping("/signin")
-    public ResponseEntity<Optional<User>> signIn(@RequestBody String userID, String password) {
-        return userRepository.signIn(userID, password);
+    @DeleteMapping("/me")
+    public ResponseEntity<Optional<User>> deleteUser(@RequestBody String userID) {
+        return userController.deleteUser(userID);
+    }
+
+    @GetMapping("/deleteAllUsers")
+    public ResponseEntity<Boolean> deleteAllUsers() {
+        return userController.deleteAllUsers();
     }
 
 

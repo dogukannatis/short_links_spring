@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "links")
 public class Link {
     @Id
+    private String id;
     private String original_link;
     private String link_ref;
     private String belongs_to;
@@ -41,5 +42,13 @@ public class Link {
 
     public void setClick(int click) {
         this.click = click;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
