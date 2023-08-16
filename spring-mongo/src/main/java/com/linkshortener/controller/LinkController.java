@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -52,7 +53,7 @@ public class LinkController {
     }
 
     public ResponseEntity<Boolean> deleteLink(String id) {
-        linkRepository.deleteById(new ObjectId(id));
+        linkRepository.deleteById(id);
 
         return ResponseEntity.ok(true);
 
@@ -64,9 +65,9 @@ public class LinkController {
     }
 
     public ResponseEntity<Optional<Link>> deleteMyLink(String userID, String id) {
-        Optional<Link> link = linkRepository.findById(new ObjectId(id));
+        Optional<Link> link = linkRepository.findById(id);
         if(link.isPresent() && link.get().getId().equals(id)){
-            linkRepository.deleteById(new ObjectId(id));
+            linkRepository.deleteById(id);
             return ResponseEntity.ok(link);
         }
 

@@ -13,6 +13,10 @@ import java.util.Optional;
 @RequestMapping("/user")
 public class UserApi {
 
+    @RequestMapping("/")
+    public String home(){
+        return "Hello World!";
+    }
 
     private UserController userController;
 

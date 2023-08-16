@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -31,12 +32,12 @@ public class UserController {
     }
 
     public ResponseEntity<Optional<User>> getMyData(String userID) {
-        Optional<User> user = userRepository.findById(new ObjectId(userID));
+        Optional<User> user = userRepository.findById(userID);
         return ResponseEntity.ok(user);
     }
 
     public ResponseEntity<Optional<User>> updateUserData(String userID, User newUser) {
-        Optional<User> user = userRepository.findById(new ObjectId(userID));
+        Optional<User> user = userRepository.findById(userID);
 
         if(user.isPresent()){ // of nullable
             newUser.setId(userID);
@@ -49,7 +50,7 @@ public class UserController {
     }
 
     public ResponseEntity<Map<String, Object>> signIn(String userID, String password) {
-        Optional<User> user = userRepository.findById(new ObjectId(userID));
+        Optional<User> user = userRepository.findById(userID);
 
 //Optional<User>
         if(user.isPresent()){
@@ -74,12 +75,12 @@ public class UserController {
     }
 
     public ResponseEntity<Optional<User>> getUserWithId(String userID) {
-        Optional<User> user = userRepository.findById(new ObjectId(userID));
+        Optional<User> user = userRepository.findById(userID);
         return ResponseEntity.ok(user);
     }
 
     public ResponseEntity<Optional<User>> updateUser(String userID, User newUser) {
-        Optional<User> user = userRepository.findById(new ObjectId(userID));
+        Optional<User> user = userRepository.findById(userID);
 
         if(user.isPresent()){ // of nullable
             newUser.setId(userID);
@@ -97,9 +98,9 @@ public class UserController {
     }
 
     public ResponseEntity<Optional<User>> deleteUser(String userID) {
-        Optional<User> user = userRepository.findById(new ObjectId(userID));
+        Optional<User> user = userRepository.findById(userID);
 
-        userRepository.deleteById(new ObjectId(userID));
+        userRepository.deleteById(userID);
 
         return ResponseEntity.ok(user);
     }
