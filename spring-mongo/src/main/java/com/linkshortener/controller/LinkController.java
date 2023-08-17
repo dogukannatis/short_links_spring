@@ -15,7 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 import java.net.URI;
@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/link")
 public class LinkController {
 
     @Autowired
@@ -32,13 +33,13 @@ public class LinkController {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-
+    @GetMapping("/getAllLinks")
     public ResponseEntity<List<Link>> getAllLinks() {
         List<Link> links = linkRepository.findAll();
         return ResponseEntity.ok(links);
     }
-
-    public ResponseEntity<List<Link>> getMyLinks(String userID) {
+    @GetMapping("/getMyLinks")
+    public ResponseEntity<List<Link>> getMyLinks(@RequestBody String userID) {
         Query query = new Query();
         query.addCriteria(Criteria.where("belongs_to").is(userID));
         List<Link> links = mongoTemplate.find(query, Link.class);
@@ -46,25 +47,25 @@ public class LinkController {
         return ResponseEntity.ok(links);
 
     }
-
-    public ResponseEntity<Link> addLink(Link link) {
+    @PostMapping("/add")
+    public ResponseEntity<Link> addLink(@RequestBody Link link) {
         Link result = linkRepository.save(link);
         return ResponseEntity.ok(result);
     }
-
-    public ResponseEntity<Boolean> deleteLink(String id) {
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Boolean> deleteLink(@PathVariable String id) {
         linkRepository.deleteById(id);
 
         return ResponseEntity.ok(true);
 
     }
-
+    @DeleteMapping("/deleteAll")
     public ResponseEntity<Boolean> deleteAllLinks() {
         linkRepository.deleteAll();
         return ResponseEntity.ok(true);
     }
-
-    public ResponseEntity<Optional<Link>> deleteMyLink(String userID, String id) {
+    @DeleteMapping("/deleteMyLink/{id}")
+    public ResponseEntity<Optional<Link>> deleteMyLink(@RequestBody String userID, @PathVariable String id) {
         Optional<Link> link = linkRepository.findById(id);
         if(link.isPresent() && link.get().getId().equals(id)){
             linkRepository.deleteById(id);
@@ -73,8 +74,8 @@ public class LinkController {
 
         return null;
     }
-
-    public ResponseEntity<Link> redirect(String ref) throws URISyntaxException {
+    @RequestMapping("/redirect/{ref}")
+    public ResponseEntity<Link> redirect(@PathVariable String ref) throws URISyntaxException {
         URI yahoo = new URI(AppConstants.baseUrl+"/redirect/"+ref);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(yahoo);

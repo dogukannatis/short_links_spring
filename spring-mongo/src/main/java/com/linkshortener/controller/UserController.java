@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/user")
 public class UserController {
 
     @Autowired
@@ -34,18 +35,24 @@ public class UserController {
         userRepository.save(user);
     }
 
+    @RequestMapping("/")
+    public String home(){
+        return "Hello World!";
+    }
 
+    @GetMapping("/getAllUsers")
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userRepository.findAll();
         return ResponseEntity.ok(users);
     }
 
-    public ResponseEntity<Optional<User>> getMyData(String userID) {
+    @GetMapping("/me")
+    public ResponseEntity<Optional<User>> getMyData(@RequestBody String userID) {
         Optional<User> user = userRepository.findById(userID);
         return ResponseEntity.ok(user);
     }
-
-    public ResponseEntity<Optional<User>> updateUserData(String userID, User newUser) {
+    @PatchMapping("/me")
+    public ResponseEntity<Optional<User>> updateUserData(@RequestBody String userID, @RequestBody User newUser) {
         Optional<User> user = userRepository.findById(userID);
 
         if(user.isPresent()){ // of nullable
@@ -58,7 +65,8 @@ public class UserController {
         }
     }
 
-    public ResponseEntity<Map<String, Object>> signIn(String userID, String password) {
+    @PostMapping("/signin")
+    public ResponseEntity<Map<String, Object>> signIn(@RequestBody String userID, String password) {
         Optional<User> user = userRepository.findById(userID);
 
 //Optional<User>
@@ -82,17 +90,17 @@ public class UserController {
 
 
     }
-
-    public ResponseEntity<Optional<User>> getUserWithId(String userID) {
-        Optional<User> user = userRepository.findById(userID);
+    @GetMapping("/getUserWithId/{id}")
+    public ResponseEntity<Optional<User>> getUserWithId(@PathVariable final String id) {
+        Optional<User> user = userRepository.findById(id);
         return ResponseEntity.ok(user);
     }
-
-    public ResponseEntity<Optional<User>> updateUser(String userID, User newUser) {
-        Optional<User> user = userRepository.findById(userID);
+    @PostMapping("/updateUser/{id}")
+    public ResponseEntity<Optional<User>> updateUser(@PathVariable final String id, @RequestBody User newUser) {
+        Optional<User> user = userRepository.findById(id);
 
         if(user.isPresent()){ // of nullable
-            newUser.setId(userID);
+            newUser.setId(id);
             userRepository.save(newUser);
 
             return ResponseEntity.ok().body(user);
@@ -100,20 +108,20 @@ public class UserController {
             return ResponseEntity.status(404).body(user);
         }
     }
-
-    public ResponseEntity<User> saveUser(User user) {
+    @PostMapping("/saveUser")
+    public ResponseEntity<User> saveUser(@RequestBody User user) {
         User result = userRepository.save(user);
         return ResponseEntity.ok(result);
     }
-
-    public ResponseEntity<Optional<User>> deleteUser(String userID) {
+    @DeleteMapping("/me")
+    public ResponseEntity<Optional<User>> deleteUser(@RequestBody String userID) {
         Optional<User> user = userRepository.findById(userID);
 
         userRepository.deleteById(userID);
 
         return ResponseEntity.ok(user);
     }
-
+    @GetMapping("/deleteAllUsers")
     public ResponseEntity<Boolean> deleteAllUsers() {
         userRepository.deleteAll();
 
