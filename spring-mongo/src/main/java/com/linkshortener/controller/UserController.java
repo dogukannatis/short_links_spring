@@ -3,6 +3,7 @@ package com.linkshortener.controller;
 import com.linkshortener.entity.User;
 import com.linkshortener.repository.UserRepository;
 import com.mongodb.lang.Nullable;
+import jakarta.annotation.PostConstruct;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -25,6 +26,14 @@ public class UserController {
 
     @Autowired
     private MongoTemplate mongoTemplate;
+
+@PostConstruct
+    public void init(){
+        User user = new User();
+        user.setEmail("test@testr.com");
+        userRepository.save(user);
+    }
+
 
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userRepository.findAll();
