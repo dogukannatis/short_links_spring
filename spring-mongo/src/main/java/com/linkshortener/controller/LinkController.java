@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/link")
+@RequestMapping("/api/link")
 public class LinkController {
 
     @Autowired
@@ -35,11 +36,15 @@ public class LinkController {
     @Autowired
     private MongoTemplate mongoTemplate;
 
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/getAllLinks")
     public ResponseEntity<List<Link>> getAllLinks() {
         List<Link> links = linkRepository.findAll();
         return ResponseEntity.ok(links);
     }
+
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/getMyLinks")
     public ResponseEntity<List<Link>> getMyLinks(@RequestBody String userID) {
         Query query = new Query();
@@ -49,22 +54,30 @@ public class LinkController {
         return ResponseEntity.ok(links);
 
     }
+
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @PostMapping("/add")
     public ResponseEntity<Link> addLink(@RequestBody Link link) {
         Link result = linkRepository.save(link);
         return ResponseEntity.ok(result);
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Boolean> deleteLink(@PathVariable String id) {
         linkRepository.deleteById(id);
         return ResponseEntity.ok(true);
 
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/deleteAll")
     public ResponseEntity<Boolean> deleteAllLinks() {
         linkRepository.deleteAll();
         return ResponseEntity.ok(true);
     }
+
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @DeleteMapping("/deleteMyLink/{id}")
     public ResponseEntity<Map<String, Object>> deleteMyLink(@RequestBody String userID, @PathVariable String id) {
         Optional<Link> link = linkRepository.findById(id);

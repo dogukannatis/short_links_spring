@@ -12,6 +12,12 @@ public class Link {
     private String belongs_to;
     private int click;
 
+    public Link(String original_link, String link_ref, String belongs_to) {
+        this.original_link = original_link;
+        this.link_ref = link_ref;
+        this.belongs_to = belongs_to;
+    }
+
     public String getOriginal_link() {
         return original_link;
     }

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,7 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 public class UserController {
 
     @Autowired
@@ -34,12 +35,13 @@ public class UserController {
         return "Hello World!";
     }
 
+    @PreAuthorize("('ADMIN')")
     @GetMapping("/getAllUsers")
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userRepository.findAll();
         return ResponseEntity.ok(users);
     }
-
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getMyData(@RequestBody String userID) {
         Optional<User> user = userRepository.findById(userID);
@@ -60,6 +62,8 @@ public class UserController {
         }
 
     }
+
+    @PreAuthorize("hasRole('USER')")
     @PatchMapping("/me")
     public ResponseEntity<Map<String, Object>> updateUserData(@RequestBody String userID, @RequestBody User newUser) {
         Optional<User> user = userRepository.findById(userID);
@@ -107,6 +111,8 @@ public class UserController {
 
 
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/getUserWithId/{id}")
     public ResponseEntity<Map<String, Object>> getUserWithId(@PathVariable final String id) {
         Optional<User> user = userRepository.findById(id);
@@ -130,6 +136,7 @@ public class UserController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/updateUser/{id}")
     public ResponseEntity<Map<String, Object>> updateUser(@PathVariable final String id, @RequestBody User newUser) {
         Optional<User> user = userRepository.findById(id);
@@ -153,11 +160,15 @@ public class UserController {
             return new ResponseEntity<>(errorResponse,HttpStatus.NOT_FOUND);
         }
     }
+
+
     @PostMapping("/saveUser")
     public ResponseEntity<User> saveUser(@RequestBody User user) {
         User result = userRepository.save(user);
         return ResponseEntity.ok(result);
     }
+
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/me")
     public ResponseEntity<Map<String, Object>> deleteUser(@RequestBody String userID) {
         Optional<User> user = userRepository.findById(userID);
@@ -180,6 +191,8 @@ public class UserController {
             return new ResponseEntity<>(errorResponse,HttpStatus.NOT_FOUND);
         }
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/deleteAllUsers")
     public ResponseEntity<Boolean> deleteAllUsers() {
         userRepository.deleteAll();
