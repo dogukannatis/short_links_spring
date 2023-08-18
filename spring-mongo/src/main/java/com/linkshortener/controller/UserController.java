@@ -28,12 +28,6 @@ public class UserController {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-@PostConstruct
-    public void init(){
-        User user = new User();
-        user.setEmail("test@testr.com");
-        userRepository.save(user);
-    }
 
     @RequestMapping("/")
     public String home(){
@@ -47,21 +41,46 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<Optional<User>> getMyData(@RequestBody String userID) {
-        Optional<User> user = userRepository.findById(userID);
-        return ResponseEntity.ok(user);
-    }
-    @PatchMapping("/me")
-    public ResponseEntity<Optional<User>> updateUserData(@RequestBody String userID, @RequestBody User newUser) {
+    public ResponseEntity<Map<String, Object>> getMyData(@RequestBody String userID) {
         Optional<User> user = userRepository.findById(userID);
 
-        if(user.isPresent()){ // of nullable
+        if(user.isPresent()){
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("status", HttpStatus.OK);
+            userMap.put("user", user);
+            return ResponseEntity.ok(userMap);
+        }else{
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "error");
+            errorResponse.put("message", "No user record found");
+            errorResponse.put("status",HttpStatus.NOT_FOUND.toString());
+
+            return new ResponseEntity<>(errorResponse,HttpStatus.NOT_FOUND);
+        }
+
+    }
+    @PatchMapping("/me")
+    public ResponseEntity<Map<String, Object>> updateUserData(@RequestBody String userID, @RequestBody User newUser) {
+        Optional<User> user = userRepository.findById(userID);
+
+        if(user.isPresent()){
             newUser.setId(userID);
             userRepository.save(newUser);
 
-            return ResponseEntity.ok().body(user);
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("status", HttpStatus.OK);
+            userMap.put("message", "User has been updated");
+            userMap.put("user", user);
+            return ResponseEntity.ok(userMap);
         }else{
-            return ResponseEntity.status(404).body(user);
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "error");
+            errorResponse.put("message", "No user record found");
+            errorResponse.put("status",HttpStatus.NOT_FOUND.toString());
+
+            return new ResponseEntity<>(errorResponse,HttpStatus.NOT_FOUND);
         }
     }
 
@@ -71,41 +90,67 @@ public class UserController {
 
 //Optional<User>
         if(user.isPresent()){
-            Map<String, Object> userMap = new HashMap<String, Object>();
+            Map<String, Object> userMap = new HashMap<>();
             userMap.put("status", HttpStatus.OK);
+            userMap.put("message", "User logged in");
             userMap.put("user", user);
             return ResponseEntity.ok(userMap);
         }else{
-            //throw new RuntimeException("User not found");
-            // return ResponseEntity.status(404).body("User not found");
-            //return ResponseEntity.notFound().build();
 
-            Map<String, Object> errorResponse = new HashMap<String, Object>();
+            Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", "error");
             errorResponse.put("message", "No user record found");
             errorResponse.put("status",HttpStatus.NOT_FOUND.toString());
 
-            return new ResponseEntity<>(errorResponse,HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(errorResponse,HttpStatus.NOT_FOUND);
         }
 
 
     }
     @GetMapping("/getUserWithId/{id}")
-    public ResponseEntity<Optional<User>> getUserWithId(@PathVariable final String id) {
-        Optional<User> user = userRepository.findById(id);
-        return ResponseEntity.ok(user);
-    }
-    @PostMapping("/updateUser/{id}")
-    public ResponseEntity<Optional<User>> updateUser(@PathVariable final String id, @RequestBody User newUser) {
+    public ResponseEntity<Map<String, Object>> getUserWithId(@PathVariable final String id) {
         Optional<User> user = userRepository.findById(id);
 
-        if(user.isPresent()){ // of nullable
+        if(user.isPresent()){
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("status", HttpStatus.OK);
+            userMap.put("user", user);
+            return ResponseEntity.ok(userMap);
+        }else{
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "error");
+            errorResponse.put("message", "No user record found");
+            errorResponse.put("status",HttpStatus.NOT_FOUND.toString());
+
+            return new ResponseEntity<>(errorResponse,HttpStatus.NOT_FOUND);
+        }
+
+
+
+    }
+
+
+    @PostMapping("/updateUser/{id}")
+    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable final String id, @RequestBody User newUser) {
+        Optional<User> user = userRepository.findById(id);
+
+        if(user.isPresent()){
             newUser.setId(id);
             userRepository.save(newUser);
 
-            return ResponseEntity.ok().body(user);
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("status", HttpStatus.OK);
+            userMap.put("message", "User has been updated");
+            userMap.put("user", user);
+            return ResponseEntity.ok(userMap);
         }else{
-            return ResponseEntity.status(404).body(user);
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "error");
+            errorResponse.put("message", "No user record found");
+            errorResponse.put("status",HttpStatus.NOT_FOUND.toString());
+
+            return new ResponseEntity<>(errorResponse,HttpStatus.NOT_FOUND);
         }
     }
     @PostMapping("/saveUser")
@@ -114,12 +159,26 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
     @DeleteMapping("/me")
-    public ResponseEntity<Optional<User>> deleteUser(@RequestBody String userID) {
+    public ResponseEntity<Map<String, Object>> deleteUser(@RequestBody String userID) {
         Optional<User> user = userRepository.findById(userID);
 
-        userRepository.deleteById(userID);
+        if(user.isPresent()){
+            userRepository.deleteById(userID);
 
-        return ResponseEntity.ok(user);
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("status", HttpStatus.OK);
+            userMap.put("message", "User has been deleted");
+            userMap.put("user", user);
+            return ResponseEntity.ok(userMap);
+        }else{
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "error");
+            errorResponse.put("message", "No user record found");
+            errorResponse.put("status",HttpStatus.NOT_FOUND.toString());
+
+            return new ResponseEntity<>(errorResponse,HttpStatus.NOT_FOUND);
+        }
     }
     @GetMapping("/deleteAllUsers")
     public ResponseEntity<Boolean> deleteAllUsers() {

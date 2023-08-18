@@ -20,7 +20,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -55,7 +57,6 @@ public class LinkController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Boolean> deleteLink(@PathVariable String id) {
         linkRepository.deleteById(id);
-
         return ResponseEntity.ok(true);
 
     }
@@ -65,14 +66,28 @@ public class LinkController {
         return ResponseEntity.ok(true);
     }
     @DeleteMapping("/deleteMyLink/{id}")
-    public ResponseEntity<Optional<Link>> deleteMyLink(@RequestBody String userID, @PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> deleteMyLink(@RequestBody String userID, @PathVariable String id) {
         Optional<Link> link = linkRepository.findById(id);
+
+
         if(link.isPresent() && link.get().getId().equals(id)){
             linkRepository.deleteById(id);
-            return ResponseEntity.ok(link);
+
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("status", HttpStatus.OK);
+            userMap.put("message", "Link has been deleted");
+            userMap.put("link", link);
+            return ResponseEntity.ok(userMap);
+        }else{
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "error");
+            errorResponse.put("message", "No link record found");
+            errorResponse.put("status",HttpStatus.NOT_FOUND.toString());
+
+            return new ResponseEntity<>(errorResponse,HttpStatus.NOT_FOUND);
         }
 
-        return null;
     }
     @RequestMapping("/redirect/{ref}")
     public ResponseEntity<Link> redirect(@PathVariable String ref) throws URISyntaxException {
