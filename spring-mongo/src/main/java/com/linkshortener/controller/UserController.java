@@ -2,6 +2,7 @@ package com.linkshortener.controller;
 
 import com.linkshortener.entity.User;
 import com.linkshortener.repository.UserRepository;
+import com.linkshortener.security.services.UserDetailsImpl;
 import com.mongodb.lang.Nullable;
 import jakarta.annotation.PostConstruct;
 import org.bson.types.ObjectId;
@@ -10,6 +11,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -43,8 +47,14 @@ public class UserController {
     }
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> getMyData(@RequestBody String userID) {
-        Optional<User> user = userRepository.findById(userID);
+    public ResponseEntity<Map<String, Object>> getMyData() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        Optional<User> user = userRepository.findById(userDetails.getId());
+
 
         if(user.isPresent()){
             Map<String, Object> userMap = new HashMap<>();
@@ -65,11 +75,16 @@ public class UserController {
 
     @PreAuthorize("hasRole('USER')")
     @PatchMapping("/me")
-    public ResponseEntity<Map<String, Object>> updateUserData(@RequestBody String userID, @RequestBody User newUser) {
-        Optional<User> user = userRepository.findById(userID);
+    public ResponseEntity<Map<String, Object>> updateUserData(@RequestBody User newUser) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        Optional<User> user = userRepository.findById(userDetails.getId());
 
         if(user.isPresent()){
-            newUser.setId(userID);
+            newUser.setId(userDetails.getId());
+
             userRepository.save(newUser);
 
             Map<String, Object> userMap = new HashMap<>();
@@ -88,29 +103,6 @@ public class UserController {
         }
     }
 
-    @PostMapping("/signin")
-    public ResponseEntity<Map<String, Object>> signIn(@RequestBody String userID, String password) {
-        Optional<User> user = userRepository.findById(userID);
-
-//Optional<User>
-        if(user.isPresent()){
-            Map<String, Object> userMap = new HashMap<>();
-            userMap.put("status", HttpStatus.OK);
-            userMap.put("message", "User logged in");
-            userMap.put("user", user);
-            return ResponseEntity.ok(userMap);
-        }else{
-
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "error");
-            errorResponse.put("message", "No user record found");
-            errorResponse.put("status",HttpStatus.NOT_FOUND.toString());
-
-            return new ResponseEntity<>(errorResponse,HttpStatus.NOT_FOUND);
-        }
-
-
-    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/getUserWithId/{id}")
@@ -162,19 +154,17 @@ public class UserController {
     }
 
 
-    @PostMapping("/saveUser")
-    public ResponseEntity<User> saveUser(@RequestBody User user) {
-        User result = userRepository.save(user);
-        return ResponseEntity.ok(result);
-    }
-
     @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/me")
-    public ResponseEntity<Map<String, Object>> deleteUser(@RequestBody String userID) {
-        Optional<User> user = userRepository.findById(userID);
+    public ResponseEntity<Map<String, Object>> deleteUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        Optional<User> user = userRepository.findById(userDetails.getId());
 
         if(user.isPresent()){
-            userRepository.deleteById(userID);
+            userRepository.deleteById(userDetails.getId());
 
             Map<String, Object> userMap = new HashMap<>();
             userMap.put("status", HttpStatus.OK);
