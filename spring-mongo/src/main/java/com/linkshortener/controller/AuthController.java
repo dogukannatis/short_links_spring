@@ -9,8 +9,10 @@ import com.linkshortener.payload.response.MessageResponse;
 import com.linkshortener.repository.RoleRepository;
 import com.linkshortener.repository.UserRepository;
 import com.linkshortener.security.jwt.JwtUtils;
+import com.linkshortener.security.services.EmailSenderService;
 import com.linkshortener.security.services.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,19 +35,25 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/auth")
 public class AuthController {
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    RoleRepository roleRepository;
+    private RoleRepository roleRepository;
 
     @Autowired
-    PasswordEncoder encoder;
+    private EmailSenderService senderService;
 
     @Autowired
-    JwtUtils jwtUtils;
+    private PasswordEncoder encoder;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
+    @Value("${linkshortener.app.url}")
+    private String url;
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) { //@Valid
@@ -117,8 +125,19 @@ public class AuthController {
         }
 
         user.setRoles(roles);
+
         userRepository.save(user);
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+
+        String jwt = jwtUtils.generateMailJwtToken(user.getId(), user.getEmail());
+
+        String verificationLink = url + "/api/users/verifyEmail?id=" + jwt;
+
+        senderService.sendEmail(
+                user.getEmail(),
+                "Email Verification For Link Shortener App",
+                "Please click following link to verificate your account: " + verificationLink);
+
+        return ResponseEntity.ok(new MessageResponse("User registered successfully! Please check your mail box for verification."));
     }
 }

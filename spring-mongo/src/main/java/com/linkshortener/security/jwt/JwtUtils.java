@@ -12,7 +12,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
-
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Component
@@ -22,6 +23,9 @@ public class JwtUtils {
 
     @Value("${linkshortener.app.jwtSecret}")
     private String jwtSecret;
+
+    @Value("${linkshortener.app.jwtMailSecret}")
+    private String jwtMailSecret;
 
     @Value("${linkshortener.app.jwtExpirationMs}")
     private int jwtExpirationMs;
@@ -38,7 +42,27 @@ public class JwtUtils {
                 .compact();
     }
 
+    public String generateMailJwtToken(String id, String email) {
+        Map<String, Object> claims = new HashMap<>();
+
+        claims.put("id", id);
+        claims.put("email", email);
+
+
+        return Jwts.builder()
+                .setClaims(claims)
+               // .setSubject((userPrincipal.getUsername())).set
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(key(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     private Key key() {
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+    }
+
+    private Key mailKey() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
@@ -46,6 +70,14 @@ public class JwtUtils {
         return Jwts.parserBuilder().setSigningKey(key()).build()
                 .parseClaimsJws(token).getBody().getSubject();
     }
+
+
+    public Claims parseJwt(String token) {
+        return Jwts.parserBuilder().setSigningKey(key()).build()
+                .parseClaimsJws(token).getBody();
+    }
+
+
 
     public boolean validateJwtToken(String authToken) {
         try {

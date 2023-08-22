@@ -2,8 +2,11 @@ package com.linkshortener.controller;
 
 import com.linkshortener.entity.User;
 import com.linkshortener.repository.UserRepository;
+import com.linkshortener.security.jwt.JwtUtils;
+import com.linkshortener.security.services.EmailSenderService;
 import com.linkshortener.security.services.UserDetailsImpl;
 import com.mongodb.lang.Nullable;
+import io.jsonwebtoken.Claims;
 import jakarta.annotation.PostConstruct;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +35,12 @@ public class UserController {
 
     @Autowired
     private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private EmailSenderService senderService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
 
     @RequestMapping("/")
@@ -186,6 +195,18 @@ public class UserController {
     @GetMapping("/deleteAllUsers")
     public ResponseEntity<Boolean> deleteAllUsers() {
         userRepository.deleteAll();
+
+        return ResponseEntity.ok(true);
+    }
+
+
+    @GetMapping("/verifyEmail/{token}")
+    public ResponseEntity<Boolean> verifyEmail(@PathVariable String token) {
+
+        Claims claims = jwtUtils.parseJwt(token);
+
+        //Optional<User> user = userRepository.findById(claims.get());
+
 
         return ResponseEntity.ok(true);
     }

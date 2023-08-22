@@ -37,7 +37,7 @@ public class LinkController {
     private LinkRepository linkRepository;
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
     private MongoTemplate mongoTemplate;
