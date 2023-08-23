@@ -200,16 +200,7 @@ public class UserController {
     }
 
 
-    @GetMapping("/verifyEmail/{token}")
-    public ResponseEntity<Boolean> verifyEmail(@PathVariable String token) {
 
-        Claims claims = jwtUtils.parseJwt(token);
-
-        //Optional<User> user = userRepository.findById(claims.get());
-
-
-        return ResponseEntity.ok(true);
-    }
 
 
 

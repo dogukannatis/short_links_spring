@@ -13,17 +13,16 @@ import com.linkshortener.security.services.EmailSenderService;
 import com.linkshortener.security.services.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashSet;
 import java.util.List;
@@ -42,6 +41,9 @@ public class AuthController {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     @Autowired
     private EmailSenderService senderService;
@@ -140,4 +142,32 @@ public class AuthController {
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully! Please check your mail box for verification."));
     }
+
+
+    @GetMapping("/verifyEmail/{token}")
+    public ResponseEntity<Boolean> verifyEmail(@PathVariable String token) {
+
+        if(jwtUtils.validateJwtToken(token)){
+            String userName = jwtUtils.getUserNameFromJwtToken(token);
+
+            Query query = new Query();
+            query.addCriteria(Criteria.where("username").is(userName));
+
+            User user = mongoTemplate.findOne(query, User.class);
+
+            user.setEmailVerified(true);
+
+            userRepository.save(user);
+
+            //Optional<User> user = userRepository.findById(claims.get());
+
+            return ResponseEntity.ok(true);
+        }else{
+            return ResponseEntity.ok(false);
+        }
+
+
+    }
+
+
 }

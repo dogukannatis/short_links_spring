@@ -54,7 +54,7 @@ public class JwtUtils {
                // .setSubject((userPrincipal.getUsername())).set
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
-                .signWith(key(), SignatureAlgorithm.HS256)
+                .signWith(mailKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 

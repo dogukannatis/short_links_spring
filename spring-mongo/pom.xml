@@ -93,6 +93,12 @@
             <version>2.1.2</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>jakarta.mail</artifactId>
+        </dependency>
+
+
     </dependencies>
 
     <build>
