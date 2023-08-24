@@ -27,6 +27,9 @@ public class JwtUtils {
     @Value("${linkshortener.app.jwtMailSecret}")
     private String jwtMailSecret;
 
+    @Value("${linkshortener.app.jwtResetPasswordSecret}")
+    private String jwtResetPasswordSecret;
+
     @Value("${linkshortener.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
@@ -63,6 +66,23 @@ public class JwtUtils {
                 .compact();
     }
 
+    public String generateResetPasswordJwtToken(String id, String username, String email) {
+        Map<String, Object> claims = new HashMap<>();
+
+        claims.put("id", id);
+        claims.put("username", username);
+        claims.put("email", email);
+
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(resetPasswordKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
 
     private Key key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
@@ -72,6 +92,10 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtMailSecret));
     }
 
+    private Key resetPasswordKey() {
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtResetPasswordSecret));
+    }
+
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key()).build()
                 .parseClaimsJws(token).getBody().getSubject();
@@ -79,6 +103,12 @@ public class JwtUtils {
 
     public String getUserNameFromMailJwtToken(String token) {
         return Jwts.parserBuilder().setSigningKey(mailKey()
+                ).build()
+                .parseClaimsJws(token).getBody().getSubject();
+    }
+
+    public String getUserNameFromResetPasswordJwtToken(String token) {
+        return Jwts.parserBuilder().setSigningKey(resetPasswordKey()
                 ).build()
                 .parseClaimsJws(token).getBody().getSubject();
     }
@@ -111,6 +141,23 @@ public class JwtUtils {
     public boolean validateMailJwtToken(String authToken) {
         try {
             Jwts.parserBuilder().setSigningKey(mailKey()).build().parse(authToken);
+            return true;
+        } catch (MalformedJwtException e) {
+            logger.error("Invalid JWT token: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            logger.error("JWT token is expired: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            logger.error("JWT token is unsupported: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            logger.error("JWT claims string is empty: {}", e.getMessage());
+        }
+
+        return false;
+    }
+
+    public boolean validateResetPasswordJwtToken(String authToken) {
+        try {
+            Jwts.parserBuilder().setSigningKey(resetPasswordKey()).build().parse(authToken);
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());

@@ -184,4 +184,62 @@ public class AuthController {
     }
 
 
+    @GetMapping("/resetPassword/{username}")
+    public ResponseEntity<Boolean> resetPassword(@PathVariable String username) {
+
+        Optional<User> user = userRepository.findByUsername(username);
+
+        if(user.isPresent()){
+
+            String jwt = jwtUtils.generateResetPasswordJwtToken(
+                    user.get().getId(), user.get().getUsername(), user.get().getEmail());
+
+            String resetLink = url + "/api/auth/resetPassword/" + jwt;
+
+            senderService.sendEmail(
+                    user.get().getEmail(),
+                    "Reset your password for Link Shortener App",
+                    "Please click following link to reset your password: " + resetLink);
+
+
+
+            return ResponseEntity.ok(true);
+        }else{
+            return ResponseEntity.ok(false);
+        }
+
+
+    }
+
+    @PostMapping("/resetPassword/{token}")
+    public ResponseEntity<Boolean> saveNewPassword(@PathVariable String token, @RequestBody String newPassword) {
+
+        if(jwtUtils.validateResetPasswordJwtToken(token)){
+            String userName = jwtUtils.getUserNameFromResetPasswordJwtToken(token);
+
+            System.out.println("userName " + userName);
+
+
+            Optional<User> user = userRepository.findByUsername(userName);
+
+            if(user.isPresent()){
+                user.get().setPassword(encoder.encode(newPassword));
+                userRepository.save(user.get());
+
+                return ResponseEntity.ok(true);
+            }else{
+                return ResponseEntity.ok(false);
+            }
+
+
+            //Optional<User> user = userRepository.findById(claims.get());
+
+
+        }else{
+            return ResponseEntity.ok(false);
+        }
+
+
+    }
+
 }
