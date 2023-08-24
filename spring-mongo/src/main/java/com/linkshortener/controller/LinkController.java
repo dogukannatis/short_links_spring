@@ -8,6 +8,7 @@ import com.linkshortener.repository.LinkRepository;
 
 import com.linkshortener.repository.UserRepository;
 import com.linkshortener.security.services.UserDetailsImpl;
+import com.linkshortener.utilities.RandomStringGenerator;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -67,18 +68,21 @@ public class LinkController {
     }
 
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    @PostMapping("/add/{url}")
-    public ResponseEntity<Link> addLink(@RequestParam String url) {
+    @PostMapping("/add")
+    public ResponseEntity<Link> addLink(@RequestBody Link url) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        byte[] array = new byte[6]; // length is bounded by 7
-        new Random().nextBytes(array);
-        String refString = new String(array, Charset.forName("UTF-8"));
+        //byte[] array = new byte[6];
+        // new Random().nextBytes(array);
+        // String refString = new String(array, Charset.forName("UTF-8"));
+
+        String refString = RandomStringGenerator.generateRandomString(6).toUpperCase();
+
 
         Link link = new Link(
-                url,
+                url.getOriginal_link(),
                 refString,
                 userDetails.getId(),
                 0
@@ -136,11 +140,13 @@ public class LinkController {
         }
 
     }
-    @RequestMapping("/redirect/{ref}")
+
+
+    @GetMapping("/redirect/{ref}")
     public ResponseEntity<Link> redirect(@PathVariable String ref) throws URISyntaxException {
 
         Query query = new Query();
-        query.addCriteria(Criteria.where("ref").is(ref));
+        query.addCriteria(Criteria.where("link_ref").is(ref));
         Link link = mongoTemplate.findOne(query, Link.class);
         if(link != null){
             link.setClick(link.getClick() + 1);
@@ -148,9 +154,10 @@ public class LinkController {
         }
 
 
-        URI yahoo = new URI(AppConstants.baseUrl+"/redirect/"+ref);
+        //URI newDirection = new URI(AppConstants.baseUrl+"/redirect/"+ref);
+        URI newDirection = new URI(link.getOriginal_link());
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setLocation(yahoo);
+        httpHeaders.setLocation(newDirection);
         return new ResponseEntity<>(httpHeaders, HttpStatus.SEE_OTHER);
 
     }
