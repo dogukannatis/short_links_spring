@@ -42,32 +42,44 @@ public class JwtUtils {
                 .compact();
     }
 
-    public String generateMailJwtToken(String id, String email) {
+
+
+
+
+    public String generateMailJwtToken(String id, String username, String email) {
         Map<String, Object> claims = new HashMap<>();
 
         claims.put("id", id);
+        claims.put("username", username);
         claims.put("email", email);
 
 
         return Jwts.builder()
                 .setClaims(claims)
-               // .setSubject((userPrincipal.getUsername())).set
+                .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(mailKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
+
     private Key key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
     private Key mailKey() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtMailSecret));
     }
 
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key()).build()
+                .parseClaimsJws(token).getBody().getSubject();
+    }
+
+    public String getUserNameFromMailJwtToken(String token) {
+        return Jwts.parserBuilder().setSigningKey(mailKey()
+                ).build()
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
@@ -82,6 +94,23 @@ public class JwtUtils {
     public boolean validateJwtToken(String authToken) {
         try {
             Jwts.parserBuilder().setSigningKey(key()).build().parse(authToken);
+            return true;
+        } catch (MalformedJwtException e) {
+            logger.error("Invalid JWT token: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            logger.error("JWT token is expired: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            logger.error("JWT token is unsupported: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            logger.error("JWT claims string is empty: {}", e.getMessage());
+        }
+
+        return false;
+    }
+
+    public boolean validateMailJwtToken(String authToken) {
+        try {
+            Jwts.parserBuilder().setSigningKey(mailKey()).build().parse(authToken);
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());

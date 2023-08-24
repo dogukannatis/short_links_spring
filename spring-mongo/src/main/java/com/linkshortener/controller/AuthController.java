@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -59,6 +60,12 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) { //@Valid
+
+        Optional<User> user = userRepository.findByUsername(loginRequest.getUsername());
+
+        if(user.isPresent() && !user.get().isEmailVerified()){
+            return ResponseEntity.ok("Please verfiy your email");
+        }
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
@@ -131,9 +138,9 @@ public class AuthController {
         userRepository.save(user);
 
 
-        String jwt = jwtUtils.generateMailJwtToken(user.getId(), user.getEmail());
+        String jwt = jwtUtils.generateMailJwtToken(user.getId(), user.getUsername(), user.getEmail());
 
-        String verificationLink = url + "/api/users/verifyEmail?id=" + jwt;
+        String verificationLink = url + "/api/auth/verifyEmail/" + jwt;
 
         senderService.sendEmail(
                 user.getEmail(),
@@ -147,21 +154,28 @@ public class AuthController {
     @GetMapping("/verifyEmail/{token}")
     public ResponseEntity<Boolean> verifyEmail(@PathVariable String token) {
 
-        if(jwtUtils.validateJwtToken(token)){
-            String userName = jwtUtils.getUserNameFromJwtToken(token);
+        if(jwtUtils.validateMailJwtToken(token)){
+            String userName = jwtUtils.getUserNameFromMailJwtToken(token);
 
-            Query query = new Query();
-            query.addCriteria(Criteria.where("username").is(userName));
+            System.out.println("userName " + userName);
 
-            User user = mongoTemplate.findOne(query, User.class);
 
-            user.setEmailVerified(true);
+            Optional<User> user = userRepository.findByUsername(userName);
 
-            userRepository.save(user);
+            if(user.isPresent()){
+                user.get().setEmailVerified(true);
+
+                userRepository.save(user.get());
+
+                return ResponseEntity.ok(true);
+            }else{
+                return ResponseEntity.ok(false);
+            }
+
 
             //Optional<User> user = userRepository.findById(claims.get());
 
-            return ResponseEntity.ok(true);
+
         }else{
             return ResponseEntity.ok(false);
         }
