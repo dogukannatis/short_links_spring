@@ -21,6 +21,16 @@ public class User {
     @DBRef
     private Set<Role> roles = new HashSet<>();
 
+    public Set<String> getRoleNames() {
+        return roleNames;
+    }
+
+    public void setRoleNames(Set<String> roleNames) {
+        this.roleNames = roleNames;
+    }
+
+    private Set<String> roleNames;
+
 
     public User() {}
 
@@ -29,6 +39,7 @@ public class User {
         this.email = email;
         this.password = password;
     }
+
 
     public String getId() {
         return id;
